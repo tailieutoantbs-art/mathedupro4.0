@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bảng Trắng Trình Chiếu Kỹ Thuật Số (Digital Whiteboard 3.0)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- PDF.js for PDF import -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<!-- MathJax Configuration & Engine -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    svg: { fontCache: 'global' },
+    startup: { typeset: false }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+
+<!-- Desmos Graphing Calculator API -->
+<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b149148499964da2f11c"></script>
+
+<style>
+  /* ---- HỆ THỐNG BIẾN MÀU SẮC (THEME) ---- */
+  :root {
+    --bg: #1a1a1a;
+    --panel: #222222;
+    --panel-light: #2d2d2d;
+    --border: #333333;
+    --border-light: #3a3a3a;
+    --accent: #4a7cff;
+    --accent-hover: #739bff;
+    --accent-tint: rgba(74, 124, 255, 0.15);
+    --text: #eeeeee;
+    --text-dim: #aaaaaa;
+  }
+  
+  body.theme-ocean {
+    --bg: #09131e;
+    --panel: #111f31;
+    --panel-light: #192e47;
+    --border: #233d5e;
+    --border-light: #304f75;
+    --accent: #0ea5e9;
+    --accent-hover: #38bdf8;
+    --accent-tint: rgba(14, 165, 233, 0.2);
+  }
+
+  body.theme-forest {
+    --bg: #0c1712;
+    --panel: #12241b;
+    --panel-light: #1b3528;
+    --border: #254737;
+    --border-light: #315c48;
+    --accent: #10b981;
+    --accent-hover: #34d399;
+    --accent-tint: rgba(16, 185, 129, 0.2);
+  }
+
+  body.theme-volcano {
+    --bg: #1f0f0f;
+    --panel: #2d1616;
+    --panel-light: #422020;
+    --border: #522828;
+    --border-light: #703838;
+    --accent: #ef4444;
+    --accent-hover: #f87171;
+    --accent-tint: rgba(239, 68, 68, 0.2);
+  }
+
+  body.theme-mystic {
+    --bg: #150d1e;
+    --panel: #21142e;
+    --panel-light: #311e42;
+    --border: #442a59;
+    --border-light: #573673;
+    --accent: #a855f7;
+    --accent-hover: #c084fc;
+    --accent-tint: rgba(168, 85, 247, 0.2);
+  }
+
+  body.theme-gold {
+    --bg: #1a150a;
+    --panel: #29210e;
+    --panel-light: #3d3116;
+    --border: #52421d;
+    --border-light: #6b5626;
+    --accent: #f59e0b;
+    --accent-hover: #fbbf24;
+    --accent-tint: rgba(245, 158, 11, 0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body { height: 100%; overflow: hidden; font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); transition: background 0.3s; }
+  #app { display:flex; flex-direction:column; height:100vh; }
+  
+  /* Thanh công cụ (Top bar) */
+  #topbar { display:flex; align-items:center; gap:6px; padding:6px 12px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; transition: background 0.3s, border-color 0.3s; z-index: 20; }
+  #tabs { display:flex; gap:4px; flex:1; overflow-x:auto; }
+  .tab { padding:5px 12px; background:var(--panel-light); border:1px solid var(--border-light); border-radius:8px; cursor:pointer; white-space:nowrap; font-size:12.5px; display:flex; align-items:center; gap:6px; color:var(--text-dim); transition: all 0.2s; font-weight:600; }
+  .tab:hover { background:var(--accent-tint); color:var(--accent-hover); border-color:var(--accent); }
+  .tab.active { background:var(--accent); border-color:var(--accent-hover); color:#fff; box-shadow:0 0 10px var(--accent-tint); }
+  .tab .close { opacity:.5; font-size:14px; padding:0 2px; border-radius:4px; }
+  .tab .close:hover { background:rgba(255,255,255,.2); opacity:1; }
+  .tab input { background:transparent; border:none; color:inherit; width:110px; outline:none; font-size:12.5px; font-family:inherit; font-weight:600; }
+  
+  .top-btn { background:var(--panel-light); border:1px solid var(--border-light); color:var(--text-dim); padding:5px 10px; border-radius:8px; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px; transition: all 0.2s; font-weight:600; white-space:nowrap; }
+  .top-btn:hover { background:var(--accent-tint); color:var(--accent-hover); border-color:var(--accent); }
+  .top-btn.active { background:var(--accent); color:#fff; border-color:var(--accent-hover); box-shadow:0 0 10px var(--accent-tint); }
+  
+  .top-btn.btn-desmos { background:rgba(244,63,94,0.15); border-color:rgba(244,63,94,0.4); color:#fb7185; }
+  .top-btn.btn-desmos:hover { background:#f43f5e; color:#fff; box-shadow:0 0 12px rgba(244,63,94,0.5); }
+  
+  .top-btn.btn-mathstudio { background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.4); color:#38bdf8; }
+  .top-btn.btn-mathstudio:hover { background:#0ea5e9; color:#fff; box-shadow:0 0 12px rgba(14,165,233,0.5); }
+
+  .top-btn.btn-exampres { background:rgba(168,85,247,0.15); border-color:rgba(168,85,247,0.4); color:#c084fc; }
+  .top-btn.btn-exampres:hover, .top-btn.btn-exampres.active { background:#a855f7; color:#fff; box-shadow:0 0 12px rgba(168,85,247,0.5); }
+
+  .top-btn.btn-instrument { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.35); color:#fbbf24; }
+  .top-btn.btn-instrument:hover, .top-btn.btn-instrument.active { background:#f59e0b; color:#fff; box-shadow:0 0 10px rgba(245,158,11,0.4); }
+
+  .top-btn.bell { background:rgba(212,160,23,0.15); border-color:#d4a017; color:#facc15;}
+  .top-btn.bell:hover { background:#d4a017; color:#fff; box-shadow:0 0 10px rgba(212,160,23,0.4); }
+  .top-btn.guide { background:rgba(39,174,96,0.15); border-color:#27ae60; font-weight: 600; color:#4ade80;}
+  .top-btn.guide:hover { background:#27ae60; color:#fff; box-shadow:0 0 10px rgba(39,174,96,0.4); }
+  
+  #zoom-controls { display:flex; align-items:center; gap:2px; background:var(--panel-light); padding:3px 6px; border-radius:8px; border:1px solid var(--border-light); transition: background 0.3s, border-color 0.3s; }
+  #zoom-controls button { background:transparent; border:none; color:var(--text-dim); padding:3px 8px; cursor:pointer; font-size:13px; border-radius:4px; transition: color 0.2s; }
+  #zoom-controls button:hover { background:var(--border-light); color:var(--accent-hover); }
+  #zoom-val { min-width:44px; text-align:center; font-size:11.5px; font-variant-numeric:tabular-nums; color:var(--text); font-weight:700; }
+  
+  /* Không gian làm việc (Workspace) */
+  #workspace { flex:1; display:flex; position:relative; overflow:hidden; }
+  
+  /* Khung Trình chiếu Đề thi (Split Screen Panel) */
+  #exam-pres-drawer {
+    width: 0px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 12;
+    position: relative;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+  }
+  #exam-pres-drawer.open {
+    width: 440px;
+    min-width: 340px;
+    max-width: 50vw;
+  }
+  
+  /* Thanh bên (Sidebar) */
+  #sidebar { width:54px; background:var(--panel); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:8px 4px; gap:4px; z-index:10; transition: background 0.3s, border-color 0.3s; overflow-y:auto; }
+  .tool { width:46px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:transparent; border:1px solid transparent; border-radius:8px; color:var(--text-dim); font-size:16px; transition: all 0.2s; position:relative; }
+  .tool:hover { background:var(--accent-tint); color:var(--accent-hover); }
+  .tool.active { background:var(--accent); color:#fff; border-color:var(--accent-hover); box-shadow:0 0 10px var(--accent-tint); transform:scale(1.05); }
+  .tool svg { width:20px; height:20px; }
+  .tool-badge { position:absolute; top:2px; right:2px; font-size:8px; font-weight:800; background:#f43f5e; color:#fff; padding:1px 3px; border-radius:4px; }
+  .divider { height:1px; background:var(--border); margin:4px 4px; transition: background 0.3s; }
+  
+  /* Bảng thuộc tính (Properties panel) */
+  #props { position:absolute; top:12px; left:70px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:6px 10px; display:flex; gap:8px; align-items:center; z-index:5; flex-wrap:wrap; max-width:calc(100vw - 100px); box-shadow:0 4px 20px rgba(0,0,0,.4); transition: background 0.3s, border-color 0.3s; }
+  .color-swatch { width:20px; height:20px; border-radius:50%; cursor:pointer; border:2px solid var(--border); transition: transform 0.15s; }
+  .color-swatch.active { border-color:#fff; transform:scale(1.2); box-shadow:0 0 6px rgba(255,255,255,0.4); }
+  #props input[type=range] { width:90px; accent-color: var(--accent); }
+  #props label { font-size:11px; color:#aaa; font-weight:600; }
+  .prop-group { display:flex; align-items:center; gap:6px; padding:0 6px; border-right:1px solid var(--border); }
+  .prop-group:last-child { border-right:none; }
+  
+  /* Vùng vẽ (Canvas) */
+  #canvas-wrap { flex:1; position:relative; overflow:hidden; background:#fafafa; cursor:default; touch-action: none; }
+  #canvas-wrap.pan { cursor:grab; }
+  #canvas-wrap.panning { cursor:grabbing; }
+  #canvas-wrap.laser-mode { cursor: crosshair; }
+  canvas { position:absolute; top:0; left:0; }
+  
+  /* Trình soạn thảo văn bản (Text editor) */
+  #text-editor { position:absolute; background:rgba(255,255,255,.95); border:2px dashed var(--accent); outline:none; resize:both; font-family:inherit; padding:6px; z-index:50; min-width:120px; min-height:40px; pointer-events:auto; user-select:text; -webkit-user-select:text; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,0.2); }
+  
+  /* Đồng hồ (Timer) */
+  #timer { position:absolute; background:rgba(0,0,0,.85); color:#fff; border-radius:16px; padding:20px 30px; font-family:"SF Mono", Menlo, monospace; font-variant-numeric:tabular-nums; z-index:30; cursor:move; border:2px solid var(--accent); box-shadow:0 10px 40px rgba(0,0,0,.4), 0 0 20px var(--accent-tint); display:none; flex-direction:column; align-items:center; gap:8px; touch-action: none; }
+  #timer.show { display:flex; }
+  #timer-display { font-weight:700; line-height:1; }
+  #timer-controls { display:flex; gap:6px; }
+  #timer-controls button { background:var(--panel); border:1px solid var(--border-light); color:var(--text-dim); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-family:inherit; transition: all 0.2s; }
+  #timer-controls button:hover { background:var(--accent-tint); color:var(--accent-hover); border-color:var(--accent); }
+  #timer-size { display:flex; gap:4px; }
+  #timer-size button { background:var(--panel); border:1px solid var(--border-light); color:var(--text-dim); width:26px; height:26px; border-radius:4px; cursor:pointer; transition: all 0.2s; }
+  #timer-size button:hover { background:var(--accent-tint); color:var(--accent-hover); border-color:var(--accent); }
+  #timer.finished { border-color:#ff4a4a; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,74,74,.7); } 50% { box-shadow:0 0 0 20px rgba(255,74,74,0); } }
+  
+  /* Hộp thoại (Modal) */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:100; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--panel-light); border-radius:14px; padding:20px; min-width:320px; max-width:90vw; border:1px solid var(--border-light); box-shadow:0 10px 40px rgba(0,0,0,.6); transition: background 0.3s, border-color 0.3s; }
+  .modal h3 { margin-bottom:14px; color:var(--text); font-size:16px; font-weight:800; }
+  .modal input, .modal select { width:100%; padding:8px 12px; background:var(--panel); border:1px solid var(--border-light); color:var(--text); border-radius:8px; font-size:13.5px; margin-bottom:12px; font-family:inherit; transition: background 0.3s, border-color 0.3s; }
+  .modal-buttons { display:flex; gap:8px; justify-content:flex-end; }
+  .modal-buttons button { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600; transition: all 0.2s;}
+  .btn-primary { background:var(--accent); color:#fff; box-shadow:0 0 8px var(--accent-tint); }
+  .btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 12px var(--accent-tint); }
+  .btn-secondary { background:var(--panel); border:1px solid var(--border-light); color:var(--text-dim); }
+  .btn-secondary:hover { background:var(--accent-tint); color:var(--accent-hover); border-color:var(--accent); }
+  .time-inputs { display:flex; gap:8px; }
+  .time-inputs > div { flex:1; }
+  .time-inputs label { font-size:11px; color:#aaa; display:block; margin-bottom:4px; }
+  
+  /* Thông báo (Toast) */
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--panel-light); border:1px solid var(--border-light); color:var(--text); padding:10px 20px; border-radius:12px; z-index:200; font-size:13.5px; font-weight:700; font-family:'Be Vietnam Pro', system-ui, sans-serif; opacity:0; transition:opacity .3s, transform .3s; pointer-events:none; box-shadow: 0 8px 24px rgba(0,0,0,.5); max-width:90vw; word-break:break-word; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(-5px); }
+  
+  /* Nút trợ giúp (Help btn) */
+  #help-btn { position:absolute; bottom:12px; right:12px; width:36px; height:36px; border-radius:50%; background:var(--panel-light); color:var(--text); border:1px solid var(--border-light); cursor:pointer; z-index:10; font-size:15px; font-weight:700; transition: all 0.2s; }
+  #help-btn:hover { background:var(--accent); border-color:var(--accent-hover); color:#fff; transform:scale(1.1); }
+  
+  /* Khung chọn (Selection box) */
+  .sel-handle { position:absolute; width:10px; height:10px; background:#fff; border:2px solid var(--accent); border-radius:2px; z-index:15; }
+  
+  /* ---- Thu gọn thanh bên ---- */
+  #sidebar { transition: width .18s ease, min-width .18s ease, padding .18s ease, border .18s ease, background 0.3s; }
+  #sidebar.collapsed { width:0; min-width:0; padding:0; border-right:none; overflow:hidden; }
+  #sidebar-toggle {
+    position:absolute; top:50%; left:0;
+    transform: translate(var(--sidebar-w, 54px), -50%);
+    width:18px; height:60px;
+    background:var(--panel-light); border:1px solid var(--border-light); border-left:none;
+    border-radius:0 8px 8px 0; color:var(--text-dim); cursor:pointer; z-index:11;
+    font-size:12px; display:flex; align-items:center; justify-content:center;
+    transition: all 0.2s;
+  }
+  #sidebar-toggle:hover { background:var(--accent); color:#fff; border-color:var(--accent-hover); box-shadow:0 0 10px var(--accent-tint); }
+  #workspace.sidebar-collapsed { --sidebar-w: 0px; }
+  #workspace.sidebar-collapsed #sidebar-toggle { border-left:1px solid var(--border-light); }
+  
+  /* ---- Thu gọn bảng thuộc tính ---- */
+  #props {
+    left: calc(var(--sidebar-w, 54px) + 16px) !important;
+    transition: opacity .18s, transform .18s, left .18s;
+  }
+  #props.collapsed { opacity:0; pointer-events:none; transform:translateY(-12px); }
+  #props-toggle {
+    position:absolute; top:12px;
+    left: calc(var(--sidebar-w, 54px) + 16px);
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:8px; color:var(--text-dim); padding:5px 9px; cursor:pointer; z-index:6;
+    font-size:11.5px; font-weight:600;
+    transition: all 0.2s;
+  }
+  #props-toggle.hidden { opacity:0; pointer-events:none; transform:translateY(-8px); }
+  #props-toggle:hover { background:var(--accent); color:#fff; border-color:var(--accent-hover); box-shadow:0 0 10px var(--accent-tint); }
+  
+  /* ---- Menu ngữ cảnh & Menu Theme ---- */
+  .context-menu { position:fixed; background:var(--panel-light); border:1px solid var(--border-light); border-radius:12px; padding:6px; z-index:300; box-shadow:0 8px 24px rgba(0,0,0,.5); display:none; min-width:150px; flex-direction:column; gap:2px; }
+  .context-menu.show { display:flex; }
+  .context-menu button { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:transparent; border:none; color:var(--text-dim); padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-family:inherit; font-weight:600; transition: all 0.2s; }
+  .context-menu button:hover { background:var(--accent-tint); color:var(--accent-hover); }
+  .theme-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink:0; }
+
+  /* =========================================================================
+     DỤNG CỤ HÌNH HỌC KỸ THUẬT SỐ (DIGITAL GEOMETRIC INSTRUMENTS)
+     ========================================================================= */
+  
+  /* 1. THƯỚC THẲNG (RULER WIDGET) */
+  #ruler-widget {
+    position: absolute;
+    top: 140px;
+    left: 200px;
+    width: 480px;
+    height: 72px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(59, 130, 246, 0.6);
+    border-radius: 8px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    z-index: 40;
+    cursor: move;
+    transform-origin: 30px 36px;
+    display: none;
+    touch-action: none;
+  }
+  #ruler-widget.active { display: block; }
+  .ruler-ticks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ruler-header {
+    position: absolute;
+    bottom: 6px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 800;
+    color: #1e3a8a;
+  }
+  .ruler-rotate-handle {
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.5);
+    font-size: 13px;
+    z-index: 45;
+  }
+  .ruler-close-btn {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+    z-index: 45;
+    border: 2px solid #fff;
+  }
+
+  /* 2. THƯỚC ĐO GÓC (PROTRACTOR WIDGET) */
+  #protractor-widget {
+    position: absolute;
+    top: 140px;
+    left: 300px;
+    width: 360px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(16, 185, 129, 0.6);
+    border-top-left-radius: 180px;
+    border-top-right-radius: 180px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+    z-index: 40;
+    cursor: move;
+    transform-origin: 180px 190px;
+    display: none;
+    touch-action: none;
+  }
+  #protractor-widget.active { display: block; }
+  .protractor-arm {
+    position: absolute;
+    left: 180px;
+    top: 190px;
+    width: 170px;
+    height: 3px;
+    background: #ef4444;
+    transform-origin: 0% 50%;
+    pointer-events: none;
+  }
+  .protractor-arm-handle {
+    position: absolute;
+    right: -10px;
+    top: -9px;
+    width: 22px;
+    height: 22px;
+    background: #ef4444;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    cursor: grab;
+    pointer-events: auto;
+    box-shadow: 0 2px 8px rgba(239,68,68,0.5);
+  }
+  .protractor-badge {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #064e3b;
+    color: #34d399;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* 3. COMPA KỸ THUẬT SỐ (COMPASS WIDGET) */
+  #compass-widget {
+    position: absolute;
+    top: 180px;
+    left: 400px;
+    width: 260px;
+    height: 260px;
+    z-index: 40;
+    display: none;
+    touch-action: none;
+  }
+  #compass-widget.active { display: block; }
+  .compass-needle {
+    position: absolute;
+    left: 130px;
+    top: 130px;
+    width: 18px;
+    height: 18px;
+    background: #2563eb;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    cursor: move;
+    box-shadow: 0 0 10px rgba(37,99,235,0.6);
+    transform: translate(-50%, -50%);
+    z-index: 45;
+  }
+  .compass-pencil {
+    position: absolute;
+    left: 230px;
+    top: 130px;
+    width: 20px;
+    height: 20px;
+    background: #ef4444;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 0 10px rgba(239,68,68,0.6);
+    transform: translate(-50%, -50%);
+    z-index: 45;
+  }
+  .compass-rotator {
+    position: absolute;
+    left: 130px;
+    top: 30px;
+    width: 32px;
+    height: 32px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.5);
+    transform: translate(-50%, -50%);
+    z-index: 46;
+  }
+
+  /* 4. EXAM PRESENTATION DRAWER CONTENT */
+  .exam-pres-header {
+    padding: 12px 16px;
+    background: var(--panel-light);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .exam-pres-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .exam-q-box {
+    background: var(--panel-light);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .exam-q-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .exam-choice-btn {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    margin-top: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .exam-choice-btn:hover {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+  }
+  .exam-choice-btn.correct-highlight {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #34d399;
+    font-weight: 700;
+  }
+
+  /* 5. DESMOS MODAL */
+  #desmos-modal .modal {
+    width: 90vw;
+    max-width: 1100px;
+    height: 82vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+  }
+  #desmos-container {
+    flex: 1;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    background: #fff;
+  }
+</style>
+
+<!-- Project Modules -->
+<script src="js/i18n.js?v=3.0.0"></script>
+<script src="js/math-dictionary.js?v=3.0.0"></script>
+<script src="js/math-render.js?v=3.0.0"></script>
+<script src="js/math-graph-tool.js?v=3.0.0"></script>
+</head>
+<body>
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div id="tabs"></div>
+    <button class="top-btn" id="new-tab-btn" title="Thêm thẻ mới"><i class="fa-solid fa-plus"></i> Thẻ</button>
+    
+    <div id="zoom-controls">
+      <button id="zoom-out" title="Thu nhỏ">−</button>
+      <span id="zoom-val">100%</span>
+      <button id="zoom-in" title="Phóng to">+</button>
+      <button id="zoom-reset" title="Đặt lại 100%"><i class="fa-solid fa-rotate-left"></i></button>
+    </div>
+
+    <!-- CÔNG CỤ TOÁN HỌC & ĐỒ THỊ GIAI ĐOẠN 3 -->
+    <button class="top-btn btn-desmos" id="desmos-btn" onclick="openDesmosModal()" title="Mở máy tính vẽ đồ thị Desmos">
+      <i class="fa-solid fa-chart-line"></i> Desmos
+    </button>
+    <button class="top-btn btn-mathstudio" id="math-studio-btn" onclick="openMathGraphStudio('whiteboard')" title="Studio tạo Bảng biến thiên, Oxy, Hình 2D/3D">
+      <i class="fa-solid fa-shapes"></i> Math Studio
+    </button>
+
+    <!-- BỘ DỤNG CỤ HÌNH HỌC KỸ THUẬT SỐ -->
+    <button class="top-btn btn-instrument" id="ruler-toggle-btn" onclick="toggleRuler()" title="Thước thẳng kỹ thuật số (cm/pixel)">
+      <i class="fa-solid fa-ruler"></i> Thước
+    </button>
+    <button class="top-btn btn-instrument" id="protractor-toggle-btn" onclick="toggleProtractor()" title="Thước đo góc kỹ thuật số (0° - 180°)">
+      <i class="fa-solid fa-compass-drafting"></i> Đo góc
+    </button>
+    <button class="top-btn btn-instrument" id="compass-toggle-btn" onclick="toggleCompass()" title="Compa vẽ đường tròn & cung tròn">
+      <i class="fa-solid fa-circle-notch"></i> Compa
+    </button>
+
+    <!-- TRÌNH CHIẾU ĐỀ THI TƯƠNG TÁC (SPLIT SCREEN) -->
+    <button class="top-btn btn-exampres" id="exam-pres-btn" onclick="toggleExamPresentation()" title="Trình chiếu Đề thi Tương tác (Split Screen)">
+      <i class="fa-solid fa-chalkboard-user"></i> Chiếu Đề
+    </button>
+
+    <!-- TIỆN ÍCH LỚP HỌC -->
+    <button class="top-btn" id="timer-btn" title="Đồng hồ đếm ngược"><i class="fa-solid fa-stopwatch"></i> Đồng hồ</button>
+    <button class="top-btn bell" id="bell-btn" title="Rung chuông chú ý (B)"><i class="fa-solid fa-bell"></i> Chuông</button>
+    <button class="top-btn" id="random-btn" title="Công cụ chọn số / tên ngẫu nhiên"><i class="fa-solid fa-dice"></i> Ngẫu nhiên</button>
+    <button class="top-btn" id="bilingual-board-btn" onclick="toggleBilingualPresentationPanel()" title="Trình chiếu Song ngữ CLIL & Tra từ điển">🌐 Song ngữ</button>
+    <button class="top-btn" id="grid-btn" title="Đổi kiểu lưới nền"><i class="fa-solid fa-border-all"></i> Lưới</button>
+    <button class="top-btn" id="import-pdf-btn" title="Nhập tệp PDF"><i class="fa-solid fa-file-pdf"></i> Nhập PDF</button>
+    <button class="top-btn" id="save-btn" title="Xuất thẻ hiện tại ra tệp"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+    <button class="top-btn" id="load-btn" title="Nhập bảng trắng đã lưu"><i class="fa-solid fa-folder-open"></i> Mở</button>
+    <button class="top-btn" id="clear-btn" title="Xóa trắng bảng"><i class="fa-solid fa-trash"></i></button>
+    
+    <!-- GIAO DIỆN & HƯỚNG DẪN -->
+    <button class="top-btn" id="theme-btn" title="Đổi gam màu giao diện"><i class="fa-solid fa-palette"></i></button>
+    <button class="top-btn guide" id="guide-btn" title="Xem hướng dẫn sử dụng phần mềm"><i class="fa-solid fa-book-open"></i></button>
+    <button class="top-btn" onclick="window.location.href='index.html'" title="Về trang chủ Portal" style="background:rgba(99,102,241,0.2); border-color:#6366f1; color:#a5b4fc; font-weight:700;">🏠 Portal</button>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div id="workspace">
+    <!-- KHUNG TRÌNH CHIẾU ĐỀ THI (SPLIT SCREEN DRAWER) -->
+    <div id="exam-pres-drawer">
+      <div class="exam-pres-header">
+        <div class="flex items-center gap-2">
+          <span style="font-weight:900; font-size:13px; color:var(--accent);"><i class="fa-solid fa-file-lines mr-1"></i> TRÌNH CHIẾU ĐỀ THI</span>
+          <span id="pres-q-counter" style="font-size:11px; background:var(--panel); padding:2px 8px; border-radius:6px; font-weight:700; color:var(--text-dim);">1/20</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button onclick="loadSampleExamToPresentation()" class="top-btn" style="padding:4px 8px; font-size:11px;" title="Nạp Đề thi Chuẩn 2025"><i class="fa-solid fa-wand-magic-sparkles"></i> Đề mẫu</button>
+          <button onclick="toggleExamPresentation()" class="top-btn" style="padding:4px 8px; font-size:11px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <!-- Navigation bar for questions -->
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:var(--panel); border-bottom:1px solid var(--border-light);">
+        <button class="top-btn" onclick="presPrevQuestion()" id="btn-pres-prev"><i class="fa-solid fa-chevron-left"></i> Câu trước</button>
+        <div style="display:flex; gap:4px;">
+          <button class="top-btn" onclick="presCopyQuestionToCanvas()" title="Đưa câu hỏi ra Bảng Trắng"><i class="fa-solid fa-copy"></i> Ra bảng</button>
+          <button class="top-btn" onclick="presToggleSolution()" id="btn-pres-solution" title="Ẩn/Hiện lời giải chi tiết"><i class="fa-solid fa-lightbulb"></i> Lời giải</button>
+        </div>
+        <button class="top-btn" onclick="presNextQuestion()" id="btn-pres-next">Câu sau <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+
+      <!-- Question display container -->
+      <div class="exam-pres-body" id="exam-pres-container">
+        <!-- Content will be rendered dynamically with MathJax -->
+      </div>
+    </div>
+
+    <!-- SIDEBAR TOOLS -->
+    <div id="sidebar">
+      <button class="tool active" data-tool="select" title="Chọn / Di chuyển đối tượng (V). Chuột phải + Kéo để di chuyển bảng.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path fill="currentColor" stroke="none" d="M4 3l9.5 6.2-4.1 1.1-2.1 5.2z"/>
+          <path d="M13.5 12.5v-2.4a1.25 1.25 0 0 1 2.5 0v3.1"/>
+          <path d="M16 12.6V9.3a1.25 1.25 0 0 1 2.5 0v3.6"/>
+          <path d="M18.5 13.1v-2.4a1.25 1.25 0 0 1 2.5 0v4.4c0 3.1-2.3 5.4-5.5 5.4h-1.2c-2 0-3.4-.7-4.2-2.1L8.2 15a1.2 1.2 0 0 1 2.1-1.2l1.2 1.7v-4.6a1.25 1.25 0 0 1 2.5 0v2.2"/>
+        </svg>
+      </button>
+
+      <!-- BÚT LASER THUYẾT TRÌNH (LASER POINTER GIAI ĐOẠN 3) -->
+      <button class="tool" data-tool="laser" title="Bút Laser Thuyết Trình (K) - Vệt sáng tan biến sau 1.5s">
+        <i class="fa-solid fa-wand-magic" style="color:#f43f5e;"></i>
+        <span class="tool-badge">HOT</span>
+      </button>
+
+      <div class="divider"></div>
+      <button class="tool" data-tool="pen" title="Bút vẽ (P)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.5 7.5"/></svg>
+      </button>
+      <button class="tool" data-tool="highlighter" title="Bút dạ quang">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l-6 6v3h3l6-6M20 4a2 2 0 0 0-3 0l-7 7 3 3 7-7a2 2 0 0 0 0-3z"/></svg>
+      </button>
+      <button class="tool" data-tool="eraser" title="Cục tẩy (E)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H8l-5-5a2 2 0 0 1 0-3l9-9a2 2 0 0 1 3 0l7 7a2 2 0 0 1 0 3l-7 7"/><path d="M14 6l5 5"/></svg>
+      </button>
+      <div class="divider"></div>
+      <button class="tool" data-tool="rect" title="Hình chữ nhật (R)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+      </button>
+      <button class="tool" data-tool="ellipse" title="Hình elip (O)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg>
+      </button>
+      <button class="tool" data-tool="triangle" title="Hình tam giác (G)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,3 22,21 2,21"/></svg>
+      </button>
+      <button class="tool" data-tool="oxy" title="Trục toạ độ Oxy (X)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="9 6 12 3 15 6"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="18 9 21 12 18 15"/></svg>
+      </button>
+      <button class="tool" data-tool="line" title="Đường thẳng (L)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+      </button>
+      <button class="tool" data-tool="arrow" title="Mũi tên (A)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></svg>
+      </button>
+      <div class="divider"></div>
+      <button class="tool" data-tool="text" title="Văn bản (T)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v3h-6v12h-4V8H4z"/></svg>
+      </button>
+      <button class="tool" data-tool="sticky" title="Giấy nhớ (S)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11l5-5V5a2 2 0 0 0-2-2z"/><path d="M16 21v-5h5"/></svg>
+      </button>
+      <button class="tool" data-tool="mindmap" title="Khối Sơ đồ tư duy (M)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="10" y1="10" x2="6.5" y2="6.5"/><line x1="14" y1="10" x2="17.5" y2="6.5"/><line x1="10" y1="14" x2="6.5" y2="17.5"/><line x1="14" y1="14" x2="17.5" y2="17.5"/></svg>
+      </button>
+      <button class="tool" data-tool="flow" title="Khối Lưu đồ (F)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="4" rx="1"/><rect x="7" y="10" width="10" height="4" rx="1"/><rect x="7" y="18" width="10" height="4" rx="1"/><line x1="12" y1="6" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/></svg>
+      </button>
+      <button class="tool" data-tool="connector" title="Đường nối thông minh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><line x1="6.5" y1="17.5" x2="17.5" y2="6.5" stroke-dasharray="2,2"/></svg>
+      </button>
+    </div>
+
+    <!-- PROPERTIES PANEL -->
+    <div id="props">
+      <div class="prop-group">
+        <div class="color-swatch active" style="background:#000000" data-color="#000000"></div>
+        <div class="color-swatch" style="background:#e74c3c" data-color="#e74c3c"></div>
+        <div class="color-swatch" style="background:#f39c12" data-color="#f39c12"></div>
+        <div class="color-swatch" style="background:#f1c40f" data-color="#f1c40f"></div>
+        <div class="color-swatch" style="background:#2ecc71" data-color="#2ecc71"></div>
+        <div class="color-swatch" style="background:#3498db" data-color="#3498db"></div>
+        <div class="color-swatch" style="background:#9b59b6" data-color="#9b59b6"></div>
+        <div class="color-swatch" style="background:#ffffff; border-color:#666" data-color="#ffffff"></div>
+        <input type="color" id="custom-color" title="Màu tùy chỉnh" style="width:26px; height:26px; padding:0; border:none; background:transparent; cursor:pointer;">
+      </div>
+      <div class="prop-group">
+        <label id="size-label">Cỡ</label>
+        <input type="range" id="stroke-width" min="1" max="40" value="3">
+        <span id="stroke-width-val" style="font-size:11px; width:20px; font-weight:700;">3</span>
+      </div>
+      <div class="prop-group">
+        <label><input type="checkbox" id="fill-shape" style="accent-color:var(--accent);"> Tô nền</label>
+      </div>
+      <div class="prop-group">
+        <label><input type="checkbox" id="snap-ruler" checked style="accent-color:var(--accent);"> Áp thước</label>
+      </div>
+    </div>
+
+    <button id="sidebar-toggle" title="Ẩn / hiện thanh công cụ">⟨</button>
+    <button id="props-toggle" title="Ẩn / hiện thanh màu sắc">Kiểu ▾</button>
+
+    <!-- CANVAS WRAP -->
+    <div id="canvas-wrap">
+      <canvas id="bg-canvas"></canvas>
+      <canvas id="main-canvas"></canvas>
+      <canvas id="overlay-canvas"></canvas>
+
+      <!-- 1. THƯỚC THẲNG KỸ THUẬT SỐ OVERLAY -->
+      <div id="ruler-widget">
+        <button class="ruler-close-btn" onclick="toggleRuler(false)">✕</button>
+        <div class="ruler-rotate-handle" id="ruler-rotate-handle" title="Xoay thước (Kéo hoặc lăn chuột)">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
+        <canvas class="ruler-ticks" id="ruler-canvas" width="480" height="72"></canvas>
+        <div class="ruler-header">
+          <span><i class="fa-solid fa-ruler mr-1"></i> THƯỚC KẺ TBS (cm)</span>
+          <span id="ruler-angle-val">0.0°</span>
+        </div>
+      </div>
+
+      <!-- 2. THƯỚC ĐO GÓC KỸ THUẬT SỐ OVERLAY -->
+      <div id="protractor-widget">
+        <button class="ruler-close-btn" onclick="toggleProtractor(false)">✕</button>
+        <canvas class="ruler-ticks" id="protractor-canvas" width="360" height="200"></canvas>
+        <div class="protractor-arm" id="protractor-arm">
+          <div class="protractor-arm-handle" id="protractor-handle" title="Kéo để đo góc"></div>
+        </div>
+        <div class="protractor-badge" id="protractor-angle-val">📐 Góc: 45.0°</div>
+      </div>
+
+      <!-- 3. COMPA KỸ THUẬT SỐ OVERLAY -->
+      <div id="compass-widget">
+        <button class="ruler-close-btn" onclick="toggleCompass(false)">✕</button>
+        <canvas class="ruler-ticks" id="compass-canvas" width="260" height="260"></canvas>
+        <div class="compass-needle" id="compass-needle" title="Tâm compa (Kéo để đặt vị trí)"></div>
+        <div class="compass-pencil" id="compass-pencil" title="Đầu bút compa (Kéo chỉnh bán kính)"></div>
+        <div class="compass-rotator" id="compass-rotator" title="Xoay compa để vẽ cung / đường tròn">
+          <i class="fa-solid fa-rotate"></i>
+        </div>
+      </div>
+
+      <button id="help-btn" title="Phím tắt & Mẹo">?</button>
+    </div>
+
+    <!-- TIMER WIDGET -->
+    <div id="timer">
+      <div id="timer-display">05:00</div>
+      <div id="timer-controls">
+        <button id="timer-start">Bắt đầu</button>
+        <button id="timer-pause">Tạm dừng</button>
+        <button id="timer-reset">Đặt lại</button>
+        <button id="timer-set">Cài đặt</button>
+        <button id="timer-close">✕</button>
+      </div>
+      <div id="timer-size">
+        <button data-size="small" title="Nhỏ">S</button>
+        <button data-size="medium" title="Vừa">M</button>
+        <button data-size="large" title="Lớn">L</button>
+        <button data-size="xlarge" title="Rất lớn">XL</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL ĐỒ THỊ DESMOS (DESMOS GRAPHING CALCULATOR STUDIO)
+     ========================================================================= -->
+<div class="modal-overlay" id="desmos-modal">
+  <div class="modal">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-chart-line text-rose-500"></i> Máy Tính Đồ Thị Desmos 2D/3D Studio
+      </h3>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-secondary" onclick="insertDesmosPreset('bac3')">Hàm bậc 3</button>
+        <button class="btn-secondary" onclick="insertDesmosPreset('nhatbien')">Nhất biến</button>
+        <button class="btn-secondary" onclick="insertDesmosPreset('trungphuong')">Trùng phương</button>
+        <button class="btn-secondary" onclick="insertDesmosPreset('trig')">Lượng giác</button>
+        <button class="btn-primary" onclick="insertDesmosGraphToWhiteboard()" title="Chụp và chèn trực tiếp đồ thị lên Bảng Trắng">
+          <i class="fa-solid fa-file-import mr-1"></i> Chèn vào Bảng Trắng
+        </button>
+        <button class="btn-secondary" onclick="closeDesmosModal()">✕ Đóng</button>
+      </div>
+    </div>
+    <div id="desmos-container"></div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL MATH VISUAL STUDIO (BẢNG BIẾN THIÊN, OXY, 2D/3D TỪ MATH-GRAPH-TOOL)
+     ========================================================================= -->
+<div class="modal-overlay" id="math-studio-modal">
+  <div class="modal" style="width: 90vw; max-width: 980px; max-height: 88vh; display:flex; flex-direction:column;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-shapes text-sky-500"></i> Math Visual Studio - Tạo Đồ Thị & Bảng Biến Thiên
+      </h3>
+      <button class="btn-secondary" onclick="closeMathStudio()">✕ Đóng</button>
+    </div>
+
+    <!-- TAB SELECTOR -->
+    <div style="display:flex; gap:6px; margin-bottom:12px; border-bottom:1px solid var(--border-light); padding-bottom:8px;">
+      <button class="top-btn active" id="studio-tab-btn-graph" onclick="setStudioTab('graph')"><i class="fa-solid fa-chart-line"></i> Đồ Thị Oxy</button>
+      <button class="top-btn" id="studio-tab-btn-bbt" onclick="setStudioTab('bbt')"><i class="fa-solid fa-table"></i> Bảng Biến Thiên</button>
+      <button class="top-btn" id="studio-tab-btn-geo3d" onclick="setStudioTab('geo3d')"><i class="fa-solid fa-cube"></i> Hình Học 3D</button>
+      <button class="top-btn" id="studio-tab-btn-geo2d" onclick="setStudioTab('geo2d')"><i class="fa-solid fa-draw-polygon"></i> Hình Học 2D</button>
+    </div>
+
+    <!-- MAIN BODY SPLIT: CONTROLS & PREVIEW -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; flex:1; overflow-y:auto;">
+      <!-- LEFT: PARAMETERS -->
+      <div id="studio-params-pane" style="background:var(--panel); padding:12px; border-radius:10px; border:1px solid var(--border-light);">
+        <!-- DYNAMIC PARAMS INJECTED BY MATH-GRAPH-TOOL -->
+        <label style="font-size:12px; font-weight:700; color:var(--text-dim); display:block; margin-bottom:6px;">Dạng hàm số / Cấu trúc:</label>
+        <select id="studio-graph-type-select" onchange="onGraphTypeChange(this.value)">
+          <option value="bac3">Hàm bậc ba: y = ax³ + bx² + cx + d</option>
+          <option value="trungphuong">Hàm trùng phương: y = ax⁴ + bx² + c</option>
+          <option value="nhatbien">Hàm nhất biến: y = (ax+b)/(cx+d)</option>
+          <option value="bac2">Hàm bậc hai (Parabol): y = ax² + bx + c</option>
+          <option value="bac1">Hàm bậc nhất: y = ax + b</option>
+          <option value="sin">Hàm lượng giác: y = a*sin(bx)</option>
+          <option value="cos">Hàm lượng giác: y = a*cos(bx)</option>
+        </select>
+        
+        <div id="studio-dynamic-inputs" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- RIGHT: LIVE PREVIEW & INSERT -->
+      <div style="display:flex; flex-direction:column; background:#ffffff; border-radius:10px; padding:12px; align-items:center; justify-content:center; border:1px solid var(--border-light); min-height:280px;">
+        <div id="studio-preview-box" style="width:100%; display:flex; align-items:center; justify-content:center;">
+          <!-- SVG PREVIEW -->
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-buttons" style="margin-top:14px;">
+      <button class="btn-secondary" onclick="copyStudioCode()"><i class="fa-solid fa-copy mr-1"></i> Sao chép SVG</button>
+      <button class="btn-primary" onclick="insertMathStudioResult('whiteboard')">
+        <i class="fa-solid fa-file-import mr-1"></i> Chèn trực tiếp lên Bảng Trắng
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cài đặt thời gian -->
+<div class="modal-overlay" id="timer-modal">
+  <div class="modal">
+    <h3>Cài đặt đồng hồ đếm ngược</h3>
+    <div class="time-inputs">
+      <div><label>Giờ</label><input type="number" id="t-hr" min="0" max="23" value="0"></div>
+      <div><label>Phút</label><input type="number" id="t-min" min="0" max="59" value="5"></div>
+      <div><label>Giây</label><input type="number" id="t-sec" min="0" max="59" value="0"></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="timer-modal-cancel">Hủy</button>
+      <button class="btn-primary" id="timer-modal-ok">Đặt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal chọn ngẫu nhiên -->
+<div class="modal-overlay" id="random-modal">
+  <div class="modal" style="min-width:400px;">
+    <h3>Chọn ngẫu nhiên 🎲</h3>
+    <div class="picker-tabs" style="display:flex; gap:6px; margin-bottom:12px;">
+      <button class="active top-btn" data-pane="num" style="flex:1; justify-content:center;">Khoảng số</button>
+      <button class="top-btn" data-pane="name" style="flex:1; justify-content:center;">Danh sách tên</button>
+    </div>
+
+    <div class="picker-pane show" id="pane-num">
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+        <label style="min-width:40px; font-size:12px; color:#aaa;">Từ</label>
+        <input type="number" id="num-from" value="1" style="margin:0;">
+        <label style="min-width:40px; font-size:12px; color:#aaa;">Đến</label>
+        <input type="number" id="num-to" value="30" style="margin:0;">
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; color:#aaa; font-size:12px; margin-top:8px;">
+        <input type="checkbox" id="num-no-repeat" style="accent-color:var(--accent);">
+        <label for="num-no-repeat">Không lặp lại cho đến khi đặt lại</label>
+      </div>
+    </div>
+
+    <div class="picker-pane" id="pane-name" style="display:none;">
+      <textarea id="name-list" placeholder="Mỗi tên một dòng..." style="width:100%; height:90px; padding:8px; background:var(--panel); border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-family:inherit;"></textarea>
+      <div style="display:flex; align-items:center; gap:6px; color:#aaa; font-size:12px; margin-top:8px;">
+        <input type="checkbox" id="name-no-repeat" checked style="accent-color:var(--accent);">
+        <label for="name-no-repeat">Không lặp lại cho đến khi đặt lại</label>
+      </div>
+    </div>
+
+    <div style="font-size:54px; font-weight:900; text-align:center; padding:16px 0; color:var(--accent);" id="picker-result">1</div>
+
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="picker-reset">Đặt lại</button>
+      <button class="btn-secondary" id="picker-add-canvas">Gửi ra bảng</button>
+      <button class="btn-secondary" id="random-modal-cancel">Đóng</button>
+      <button class="btn-primary" id="picker-pick">Chọn</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menu ngữ cảnh của thẻ -->
+<div id="tab-menu" class="context-menu">
+  <button data-act="rename">✎ Đổi tên</button>
+  <button data-act="duplicate">⎘ Nhân bản</button>
+  <button data-act="close">✕ Đóng thẻ</button>
+</div>
+
+<!-- Menu chọn Theme / Giao diện -->
+<div id="theme-menu" class="context-menu">
+  <button data-theme="ocean"><span class="theme-dot" style="background:#0ea5e9"></span>Đại Dương</button>
+  <button data-theme="forest"><span class="theme-dot" style="background:#10b981"></span>Rừng Xanh</button>
+  <button data-theme="volcano"><span class="theme-dot" style="background:#ef4444"></span>Núi Lửa</button>
+  <button data-theme="mystic"><span class="theme-dot" style="background:#a855f7"></span>Huyền Bí</button>
+  <button data-theme="gold"><span class="theme-dot" style="background:#f59e0b"></span>Hoàng Kim</button>
+  <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+  <button data-theme="default"><span class="theme-dot" style="background:#888"></span>Mặc định</button>
+</div>
+
+<!-- Modal Hướng dẫn sử dụng Giai Đoạn 3 -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal" style="max-width:560px;">
+    <h3><i class="fa-solid fa-book-open mr-1"></i> Hướng dẫn Tính Năng Bảng Trắng 3.0</h3>
+    <div style="font-size:13.5px; line-height:1.7; color:var(--text); max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+      <b>1. Dụng cụ hình học kỹ thuật số:</b><br>
+      • <b>Thước thẳng:</b> Kéo di chuyển, kéo nút xoay màu xanh bên phải để quay góc $0^\circ - 360^\circ$. Đánh dấu "Áp thước" để vẽ đường thẳng tắp theo cạnh thước.<br>
+      • <b>Thước đo góc:</b> Đặt tâm thước vào đỉnh góc, kéo kim đỏ để đo chính xác số độ góc của hình vẽ.<br>
+      • <b>Compa:</b> Đặt chân kim xanh làm tâm, kéo đầu bút đỏ để chỉnh bán kính $R$, kéo núm xoay xanh lá ở trên để vẽ đường tròn mượt mà.<br><br>
+      <b>2. Đồ thị Desmos & Math Studio:</b><br>
+      • Nhấn <b>Desmos</b> để nhập hàm số bất kỳ và chèn đồ thị trực tiếp vào bảng.<br>
+      • Nhấn <b>Math Studio</b> để sinh nhanh Bảng biến thiên, Trục tọa độ Oxy, Khối hình 3D/2D.<br><br>
+      <b>3. Trình chiếu Đề thi Tương tác (Split Screen):</b><br>
+      • Nhấn <b>Chiếu Đề</b> để mở khay đề thi bên trái, xem công thức Toán sắc nét, chuyển câu hỏi nhanh, ẩn hiện lời giải và chép câu hỏi ra bảng để giải.<br><br>
+      <b>4. Bút Laser Thuyết Trình:</b> Chọn công cụ <b>Bút Laser (K)</b> để tạo vệt sáng chỉ dẫn tự động tan biến sau 1.5 giây.
+    </div>
+    <div class="modal-buttons" style="margin-top:16px;">
+      <button class="btn-primary" onclick="document.getElementById('help-modal').classList.remove('show')">Đã hiểu</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="file-pdf" accept="application/pdf" style="display:none">
+<input type="file" id="file-load" accept="application/json" style="display:none">
+<input type="file" id="file-image" accept="image/*" style="display:none">
+
+<!-- Script Engine -->
+<script src="js/whiteboard.js?v=3.0.0"></script>
+</body>
+</html>

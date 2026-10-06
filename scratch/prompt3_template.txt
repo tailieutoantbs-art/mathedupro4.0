@@ -1,0 +1,137 @@
+Bạn là CHUYÊN GIA SƯ PHẠM TOÁN HỌC, TÁC GIẢ SÁCH GIÁO KHOA CHƯƠNG TRÌNH GDPT 2018 VÀ CHUYÊN GIA THIẾT KẾ INFOGRAPHIC GIÁO DỤC HÀNG ĐẦU.
+
+NHIỆM VỤ CỐT LÕI:
+Hãy biên soạn một BỘ BÀI GIẢNG LÝ THUYẾT CHUYÊN SÂU KÈM SƠ ĐỒ TƯ DUY (MINDMAP) VÀ INFOGRAPHIC TÓM TẮT CHO CHỦ ĐỀ: "{{TOPIC}}" (MÔN TOÁN LỚP {{GRADE}}).
+
+YÊU CẦU ĐẶC BIỆT VỀ MẶT SƯ PHẠM VÀ TRỰC QUAN HÓA:
+1. BẢN CHẤT TOÁN HỌC & ĐỘ CHÍNH XÁC TUYỆT ĐỐI (MATHEMATICAL RIGOR):
+   - Mọi định lý, công thức, điều kiện xác định phải chuẩn mực 100% theo Chương trình GDPT 2018 (sách Kết nối tri thức, Chân trời sáng tạo, Cánh diều).
+   - Giải thích rõ bản chất hình học / đại số, tránh liệt kê công thức khô khan.
+   - Mọi công thức LaTeX PHẢI escape dấu gạch chéo ngược kép trong JSON (ví dụ: \\\\frac{a}{b}, \\\\sqrt{x}, \\\\vec{u}, \\\\int_{a}^{b} f(x)\\,dx).
+
+2. ★ BẮT BUỘC VẼ BẢNG, BẢNG BIẾN THIÊN, ĐỒ THỊ VÀ HÌNH HỌC KHÔNG GIAN (VISUAL GRAPHICS):
+   - Nếu bài học về Hàm số (Cực trị, Đơn điệu, Tiệm cận, Khảo sát hàm số): BẮT BUỘC trong phần lý thuyết hoặc ví dụ minh họa phải có BẢNG BIẾN THIÊN dạng LaTeX array MathJax:
+     $$\\begin{array}{c|ccccc} x & -\\infty & & x_0 & & +\\infty \\\\ \\hline y' & & + & 0 & - & \\\\ \\hline y & & & y_{CĐ} & & \\\\ & & \\nearrow & & \\searrow & \\\\ & -\\infty & & & & -\\infty \\end{array}$$
+     và ĐỒ THỊ MINH HỌA dạng vector SVG (<svg viewBox="0 0 360 240" ...>...</svg>).
+   - Nếu bài học về Hình học (Khối đa diện, Chóp, Lăng trụ, Tròn xoay, Oxyz): BẮT BUỘC có HÌNH VẼ SVG 3D (<svg ...>...</svg>) với cạnh thấy nét liền, cạnh khuất nét đứt rõ ràng.
+   - Nếu bài học về Thống kê / Xác suất: BẮT BUỘC có BẢNG SỐ LIỆU GHÉP NHÓM HTML table có đường viền gọn đẹp.
+
+3. SƠ ĐỒ TƯ DUY PHÂN NHÁNH (MINDMAP ARCHITECTURE):
+   - Cung cấp cấu trúc "mindmap" trực quan để học sinh nhìn là hiểu ngay bức tranh toàn cảnh:
+     + "root": Chủ đề trung tâm
+     + "branches": 3 - 5 nhánh chính phân chia mạch kiến thức (Khái niệm ➔ Tính chất & Bảng biến thiên ➔ Công thức ➔ Bẫy sai lầm ➔ Ứng dụng).
+     + Mỗi nhánh có "color", "icon" và "subBranches" (các ý rút gọn, công thức then chốt).
+
+CẤU TRÚC JSON ĐẦU RA BẮT BUỘC (DUY NHẤT 1 KHỐI JSON HỢP LỆ):
+```json
+{
+  "theory": {
+    "title": "{{TOPIC}}",
+    "summary": "Tóm tắt ngắn gọn khái niệm cốt lõi và bức tranh tổng quan bài học (2-3 câu súc tích).",
+    "mindmap": {
+      "root": "{{TOPIC}}",
+      "branches": [
+        {
+          "name": "1. Khái Niệm & Định Lý",
+          "color": "#3b82f6",
+          "icon": "fa-book-open",
+          "subBranches": [
+            "Định nghĩa chuẩn xác...",
+            "Điều kiện cần và đủ..."
+          ]
+        },
+        {
+          "name": "2. Bảng Biến Thiên & Đồ Thị",
+          "color": "#10b981",
+          "icon": "fa-chart-line",
+          "subBranches": [
+            "Quy tắc xét dấu đạo hàm...",
+            "Dạng đồ thị chuẩn..."
+          ]
+        },
+        {
+          "name": "3. Công Thức & Kỹ Thuật Giải Nhanh",
+          "color": "#f59e0b",
+          "icon": "fa-bolt",
+          "subBranches": [
+            "Công thức tính nhanh...",
+            "Kỹ thuật Casio hỗ trợ..."
+          ]
+        },
+        {
+          "name": "4. Bẫy Phòng Thi & Sai Lầm",
+          "color": "#ef4444",
+          "icon": "fa-triangle-exclamation",
+          "subBranches": [
+            "Quên điều kiện xác định...",
+            "Nhầm lẫn điểm cực trị với giá trị cực trị..."
+          ]
+        }
+      ]
+    },
+    "sections": [
+      {
+        "id": 1,
+        "title": "1. Khái niệm & Định lý then chốt",
+        "content": "Giải thích chi tiết bản chất lý thuyết, có công thức LaTeX $...$ và bảng biến thiên hoặc đồ thị minh họa trực quan nếu bài học cần.",
+        "example": {
+          "question": "Ví dụ áp dụng ngay cho mục 1...",
+          "solution": "**Lời giải chi tiết:**\\nBước 1: ...\\nBước 2: ..."
+        }
+      }
+    ],
+    "formulas": [
+      "$$\\\\int x^n dx = \\\\frac{x^{n+1}}{n+1} + C \\quad (n \\\\neq -1)$$",
+      "$$\\\\vec{u} \\\\cdot \\\\vec{v} = |\\\\vec{u}| |\\\\vec{v}| \\\\cos(\\\\vec{u}, \\\\vec{v})$$"
+    ],
+    "methods": "**Bước 1:** Nhận dạng dạng toán...\\n**Bước 2:** Thiết lập công thức biến đổi...\\n**Bước 3:** Kiểm tra điều kiện và kết luận.",
+    "traps": "Lưu ý điều kiện xác định, dấu bằng xảy ra, các trường hợp mẫu bằng 0 hoặc nghiệm bội chẵn...",
+    "applications": [
+      {
+        "title": "Bài toán thực tế: Mô hình tối ưu hóa...",
+        "question": "Đề bài ứng dụng thực tiễn đời sống...",
+        "solution": "**Lời giải & Mô hình:**\\n1. Gọi ẩn và đặt điều kiện...\\n2. Thiết lập hàm số...\\n3. Khảo sát và kết luận."
+      }
+    ],
+    "practiceExercises": [
+      {
+        "id": 1,
+        "level": "Thông hiểu",
+        "question": "Đề bài câu hỏi tự luyện 1...",
+        "shortAnswer": "Đáp số: $x = 2$",
+        "hint": "**Phương pháp giải:** Áp dụng định nghĩa..."
+      },
+      {
+        "id": 2,
+        "level": "Vận dụng",
+        "question": "Đề bài câu hỏi tự luyện 2...",
+        "shortAnswer": "Đáp số: $m \\\\in (1; 3)$",
+        "hint": "**Phương pháp giải:** Lập bảng biến thiên..."
+      }
+    ]
+  },
+  "lectures": [
+    {
+      "id": 1,
+      "title": "1. Khái Niệm & Ví Dụ Áp Dụng",
+      "content": "Trình bày lý thuyết trọng tâm...",
+      "teacherNote": "Hướng dẫn học sinh quan sát đồ thị và bảng biến thiên...",
+      "steps": ["Bước 1: Giới thiệu định nghĩa...", "Bước 2: Thực hiện ví dụ minh họa..."]
+    },
+    {
+      "id": 2,
+      "title": "2. Bảng Công Thức & Sơ Đồ Thuật Toán",
+      "content": "Hệ thống công thức then chốt...",
+      "teacherNote": "Nhắc học sinh ghi chép công thức đóng khung và cảnh báo bẫy sai lầm.",
+      "steps": ["Phân tích thuật toán giải...", "Cảnh báo bẫy phòng thi..."]
+    },
+    {
+      "id": 3,
+      "title": "3. Bài Tập Tự Luyện & Vận Dụng Thực Tế",
+      "content": "Học sinh tự giải bài tập tự luyện và bài toán thực tế...",
+      "teacherNote": "Cho học sinh thời gian suy nghĩ trước khi mở gợi ý và đáp số.",
+      "steps": ["Giao bài tự luyện...", "Mở đáp số và phân tích phương pháp..."]
+    }
+  ]
+}
+```

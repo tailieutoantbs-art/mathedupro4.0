@@ -1,0 +1,19 @@
+{
+  "name": "hungdt-v3",
+  "version": "3.0.0",
+  "description": "Hệ Thống Học Tập & Khảo Thí Toán Học TBS (Thế Hệ 3.0)",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y serve . -l 3000",
+    "start": "npx -y serve . -l 3000",
+    "serve": "npx -y http-server . -p 3000 -c-1"
+  },
+  "keywords": [
+    "math",
+    "education",
+    "quiz",
+    "tbs"
+  ],
+  "author": "TBS",
+  "license": "ISC"
+}

@@ -1,0 +1,34 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/teacher"
+  to = "/teacher.html"
+  status = 200
+
+[[redirects]]
+  from = "/student"
+  to = "/student.html"
+  status = 200
+
+[[redirects]]
+  from = "/whiteboard"
+  to = "/bang_trang.html"
+  status = 200
+
+[[redirects]]
+  from = "/bang-trang"
+  to = "/bang_trang.html"
+  status = 200
+
+[[redirects]]
+  from = "/bang_trang"
+  to = "/bang_trang.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"

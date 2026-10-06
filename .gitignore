@@ -1,0 +1,16 @@
+# Scripts nội bộ / migrate - không đưa lên repo
+scratch/
+update_ecosystem.js
+
+# Node / OS / Editor
+node_modules/
+.vercel/
+.netlify/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
